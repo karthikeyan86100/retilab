@@ -33,14 +33,12 @@ theme:
       toggle:
         icon: material/weather-night
         name: Passa alla modalità chiara
-
     - scheme: default
       primary: white   # Header bianco (il testo diventa nero in automatico)
       accent: red
       toggle:
         icon: material/weather-sunny
         name: Passa alla modalità scura
-
   # Tipografia professionale
   font:
     text: Roboto
@@ -53,27 +51,22 @@ plugins:
       cards_layout_options:
         background_color: "#2f3ab2" # Colore dello sfondo dell'immagine (blu indaco)
         color: "#ffffff"            # Colore del testo
+
 # Estensioni Markdown (Per rendere gli appunti belli e funzionali)
 markdown_extensions:
   # Permette di usare le note colorate (!!! note "Nota Bene")
   - admonition
-  
   # Permette di usare icone (es: :smile:)
   - attr_list
-  
   # Liste di definizione
   - def_list
-  
   # Note a piè di pagina
   - footnotes
-  
   # Supporto avanzato per tabelle
   - tables
-  
   # Crea link automatici alle sezioni (l'icona # che appare a lato titoli)
   - toc:
       permalink: true
-  
   # Gestione avanzata del codice (Syntax Highlighting)
   - pymdownx.highlight:
       anchor_linenums: true
@@ -82,18 +75,20 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences    # Permette di annidare blocchi di codice
-  
   # Tabbed code blocks (Utile per mostrare es. Config Cisco vs Linux)
   - pymdownx.tabbed:
       alternate_style: true 
-  
   # Checkbox nelle liste [x]
   - pymdownx.tasklist:
       custom_checkbox: true
-
   # Supporto Formule Matematiche (LaTeX) - Fondamentale per i tuoi appunti $G=(V,E)$
   - pymdownx.arithmatex:
       generic: true
-      
+
 extra:
   generator: false
+  
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
