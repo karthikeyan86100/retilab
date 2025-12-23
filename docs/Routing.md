@@ -346,3 +346,202 @@ I PC nella LAN quindi ricevono comunque i pacchetti RIP, e seppur scartati dalla
 ![images/image.png](images/image%2049.png)
 
 ---
+
+### OSPF (Open Shortest Path First)
+
+OSPF è un protocollo di routing Link State basato direttamente su IP.
+
+A differenza di RIP, ogni router OSPF acquisisce conoscenza dell’intera topologia della porzione di rete in cui si trova, che utilizzerà per calcolare localmente i cammini minimi verso ogni destinazione.
+
+![images/image.png](images/image%2050.png)
+
+Per far funzionare tutto questo, il router deve gestire tre archivi distinti nella sua memoria:
+
+- Neighbor Table - Lista dei router adiacenti (direttamente connessi), con i loro indirizzi IP, Interfacce, Router ID, Stato.
+- Topology Table (LSDB - Link State Database) - Lista di tutti gli LSA (Link State Advertisements) raccolti. Rappresenta la mappa completa della rete.
+- Routing Table - Popolata coi soli percorsi migliori, calcolati eseguendo l’algoritmo di Dijkstra sulle informazioni contenute nelle due tabelle precedenti.
+
+### Funzionamento di OSPF
+
+- **Inizializzazione del processo OSPF**
+    
+    ```
+    Router# config term # accedere alla config mode
+    Router(config)# router ospf 1 # avvio il processo OSPF, con Process ID pari ad 1 (questo serve ad identificare eventuali multiple istanze di OSPF in esecuzione sullo stesso router)
+    ```
+    
+    Automaticamente, viene assegnato al router un ID univoco a 32bit (RID), con il quale esso potrà identificarsi.
+    
+    ![images/image.png](images/image%2051.png)
+    
+    Selezione delle interfacce da annunciare durante lo scambio di messaggi:
+    
+    ```
+     Router(config)# network <ip-address> <wildcard-mask> area <area-id>
+    ```
+    
+    Tutte le interfacce il cui indirizzo rientra (match) nella combinazione ip-address e wildcard-mask indicata:
+    
+    - Verranno annunciate ai router adiacenti.
+    - Saranno destinazione di traffico OSPF
+    
+    <aside>
+    <img src="https://www.notion.so/icons/bookmark_lightgray.svg" alt="https://www.notion.so/icons/bookmark_lightgray.svg" width="20px" />
+    
+    Vogliamo evitare di inviare pacchetto OSPF in reti composte da soli hosts (LAN).
+    
+    Per fare ciò, possiamo impostare le interfacce in modalità passiva
+    
+    </aside>
+    
+    ```
+    Router(config-router)# passive-interface GigabitEthernet0/0
+    ```
+    
+- **Inizio del processo di adiacenza**
+    
+    ![images/image.png](images/image%2052.png)
+    
+    - Stato iniziale (DOWN): Entrambi i router hanno Neighbor Table vuota.
+    - R1 invia un pacchetto HELLO in Multicast a `224.0.0.5` (Gruppo a cui appartengono tutti i router OSPF)
+        
+        **Contenuto Pacchetto R1:**
+        
+        - **Source OSPF Router ID:** `1.1.1.1`
+        - **Active Neighbor Field:** `[VUOTO]` (R1 non conosce nessuno).
+        
+        R2 riceve il pacchetto, controlla i parametri (Area, Subnet, Password, Hello Timer), vede che il campo “Active Neighbor” è vuoto, capisce che R1 non è ancora a sua conoscenza.
+        
+        R2 registra R1 nella sua Neighbor Table, impostandone lo stato a INIT.
+        
+        **INIT = Conosco R1, ma lui ancora non conosce me. La comunicazione è unidirezionale.**
+        
+    - R2 risponde con un nuovo pacchetto HELLO
+        
+        **Contenuto del Pacchetto R2:**
+        
+        - **Source OSPF Router ID:** `2.2.2.2`
+        - **Active Neighbor Field:** `1.1.1.1`
+        
+        R1 lo riceve, legge il campo Source OSPF Router ID, riconosce la corrispondenza tra il suo RID e il campo Active Neighbor: Vuol dire che il suo precedente pacchetto HELLO è stato raggiunto da 2.2.2.2, che ne ha registrato la presenza.
+        
+        R1 registra R2 nella sua neighbor table con lo stato 2WAY: ora entrambi sono a conoscenza l’uno dell’altro.
+        
+    - R1 risponde con un ultimo HELLO con 2.2.2.2 nel campo Active Neighbor, così che anche R2 imposti lo stato 2WAY.
+- **Scambio di Link State Advertisement**
+    
+    Prima di inviare dati, ogni coppia di router si sincronizza per eleggere un Master e uno Slave.
+    
+    In figura, 1.1.1.1 è il master (Nella maggior parte dei casi in realtà, il master è quello con RID più alto, in questo caso sarebbe 2.2.2.2)
+    
+    ![images/image.png](images/image%2053.png)
+    
+    1.1.1.1 invia un pacchetto DBD, in cui è contenuto un sommario del suo LSDB (I soli LSA Headers). Inviamo i soli header e non l’intero LSDB, poiché per ogni coppia di router, i due LSDB differiranno ad uno stesso momento per poche informazioni. Sarebbe uno spreco trasmettere l’intero LSDB.
+    
+    Anche 2.2.2.2 invia i propri headers.
+    
+    1.1.1.1 confronta gli header ricevuti con il proprio LSDB.
+    
+    Per ognuno, se il LSA manca o se quello ricevuto è più recente, viene aggiunto alla **LSA Request List**.
+    
+    Ipotizziamo 1.1.1.1 rilevi che gli manchino 50 LSA per essere sincronizzato:
+    
+    - 1.1.1.1 genera un (o più, si inseriscono quante più richieste possibili compatibilmente con MTU) pacchetto LSR. Al suo interno c'è la lista degli ID di tutti i 50 LSA mancanti.
+    - 2.2.2.2 riceve la lista. Supponiamo che ogni LSA completo pesi 100 Byte.
+    Totale dati: 50 * 100 = 5000$ Byte.
+    L'MTU è 1500 Byte.
+    R2 non può mandare tutto in un pacchetto.
+    R2 invierà **4 pacchetti LSU (Link State Update)**:
+    • LSU #1 (Primi 14 LSA)
+    • LSU #2 (Secondi 14 LSA)
+    • LSU #3 (Terzi 14 LSA)
+    • LSU #4 (Ultimi 8 LSA)
+    - 1.1.1.1 conferma la ricezione dei LSA con un ACK cumulativo.
+    
+    La procedura si ripete con 2.2.2.2 che richiede i LSA mancanti.
+    
+    Al termine, gli LSDB dei due router sono sincronizzati (Stato FULL), eseguono l’algoritmo di Dijkstra per popolare la tabella di routing.
+    
+- **Segnalazione di cambiamenti nella topologia di rete**
+    
+    Dopo la sincronizzazione (stato **FULL**), la rete è silenziosa. I router inviano solo piccoli Hello ogni 10s (Keepalive).
+    Se però cade un link o cambia qualcosa, il router che rileva il guasto invia immediatamente un **LSU in flooding**.
+    
+    Tutti i router ricevono l'aggiornamento, aggiornano l'LSDB ed eseguono di nuovo Dijkstra.
+    
+
+### Metrica
+
+In ogni pacchetto LSU, è associata ai LSA una metrica che OSPF calcola come:
+
+$Metric=\frac{Reference Bandwidth(Mbps)}{LinkBandwidth(Mbps)}$
+
+Questo valore è ciò che l’algoritmo di Dijkstra minimizza durante il calcolo dei percorsi migliori.
+
+![images/image.png](images/image%2054.png)
+
+### Aree
+
+Per garantire la scalabilità e impedire che l'LSDB raggiunga dimensioni troppo elevate su reti vaste, OSPF divide logicamente gli AS in **Aree**.
+
+![images/image.png](images/image%2055.png)
+
+Questa segmentazione crea una gerarchia a due livelli:
+
+1. **Dominio di Flooding Ridotto:** Ogni Area mantiene il proprio LSDB. 
+2. **Isolamento dei Guasti:** Se un link cade nell'Area 1, l'algoritmo SPF viene ricalcolato **solo** dai router dell'Area 1.
+
+![images/image.png](images/image%2056.png)
+
+Tra le varie tipologie, utilizzeremo la **Stub Area**. È una configurazione ottimizzata di OSPF che **filtra le rotte esterne al Sistema Autonomo** (LSA Type 5), impedendo che entrino nell’LSDB (riducendone le dimensioni)
+Per raggiungere destinazioni esterne, la Stub Area utilizza una **Default Route (`0.0.0.0/0`)** iniettata automaticamente dal router di confine (ABR), delegando a lui ogni decisione di instradamento verso l'esterno. (In figura, il router di confine per l’area 1 è R1) 
+
+### Configurazione OSPF in Packet Tracer
+
+![images/image.png](images/image%2057.png)
+
+**Router 0:**
+
+```
+**Router>enable
+Router#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+Router(config)#router ospf 1
+Router(config-router)# area 1 stub #configurazione area stub
+Router(config-router)#network 192.168.1.0 0.0.0.255 area 1 #annuncio reti
+Router(config-router)#network 192.168.0.0 0.0.0.3 area 1
+Router(config-router)#network 192.168.0.4 0.0.0.3 area 1
+Router(config-router)#passive-interface GigabitEthernet2/0 #non inoltro pacchetti OSPF nella LAN**
+```
+
+**Router 1:**
+
+```
+**Router>enable
+Router#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+Router(config)#router ospf 1
+Router(config-router)# area 1 stub
+Router(config-router)#network 192.168.10.0 0.0.0.255 area 1
+Router(config-router)#network 192.168.0.0 0.0.0.3 area 1
+Router(config-router)#network 192.168.0.8 0.0.0.3 area 1
+Router(config-router)#passive-interface GigabitEthernet1/0**
+```
+
+**Router 2:**
+
+```
+**Router>enable
+Router#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+Router(config)#router ospf 1
+Router(config-router)# area 1 stub
+Router(config-router)#network 192.168.20.0 0.0.0.255 area 1
+Router(config-router)#network 192.168.0.4 0.0.0.3 area 1
+Router(config-router)#network 192.168.0.8 0.0.0.3 area 1
+Router(config-router)#passive-interface Ethernet2/0**
+```
+
+![images/image.png](images/image%2058.png)
+
+Con il comando `show ip ospf neighbor`, verifichiamo che le connessioni con i vicini siano in stato FULL, ad indicare che gli LSDB sono stati correttamente sincronizzati.
