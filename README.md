@@ -19,7 +19,7 @@
 * **Routing IGP:** Routing Statico, RIP (v1,v2), **OSPF** (Open Shortest Path First).
 * **Wireshark:** Analisi del traffico di rete, cattura pacchetti e studio dello stack protocollare **TCP/IP** e **ISO/OSI**.
 
-> [!NOTE]  
+> [!WARNING]  
 > Questa raccolta **NON sostituisce** in alcun modo il materiale didattico ufficiale fornito dai docenti o i libri di testo consigliati.
 > È da intendersi come un **supporto integrativo** per agevolare la comprensione pratica degli esercizi e il ripasso pre-esame.
 
